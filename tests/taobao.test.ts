@@ -9,6 +9,7 @@ import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/taobao/web/api.js'
 import { decodeNick, Taobao } from '../src/platforms/taobao/web/client.js'
+import * as norm from '../src/platforms/taobao/web/normalize.js'
 import { msgHistory, msgListen, msgSend, userGet } from '../src/platforms/taobao/web/commands.js'
 import {
   ackDiffFrame,
@@ -212,6 +213,14 @@ describe('taobao 对拍：HTTP 请求', () => {
   it('upload_media', async () => {
     const c = loadCase('taobao', 'upload_media')
     const { requests, result, error } = await replay(c, () => api.uploadMedia(tbOf(), { data: new Uint8Array(PNG), filename: '1.png' }))
+    if (error) throw error
+    expectRequests(requests, c.requests)
+    expect(result).toEqual(c.result)
+  })
+
+  it('keyword_suggest：公开接口，无需签名', async () => {
+    const c = loadCase('taobao', 'keyword_suggest')
+    const { requests, result, error } = await replay(c, async () => norm.keywords(await api.suggest(tbOf(), '手机')))
     if (error) throw error
     expectRequests(requests, c.requests)
     expect(result).toEqual(c.result)
@@ -572,12 +581,18 @@ describe('taobao auth（CLI）', () => {
     expect(state.sent).toEqual([...c.result.sent.slice(0, 3), ...c.result.sent.slice(5, 9)])
   })
 
-  it('user get me：规划中', async () => {
+  it('user get me：从 cookie 返回当前用户', async () => {
     const c = loadCase('taobao', 'get_token')
     await replay(c, () => cli('taobao', 'auth', 'login', '--cookie', COOKIES))
     const r = await cli('taobao', 'user', 'get', 'me')
-    expect(r.code).toBe(4)
-    expect(r.env.error.code).toBe('NOT_IMPLEMENTED')
+    expect(r.code).toBe(0)
+    expect(r.env.data).toMatchObject({ id: '2200000001', name: 'tester' })
+  })
+
+  it('user get 非 me：未登录报 AUTH_REQUIRED', async () => {
+    const r = await cli('taobao', 'user', 'get', 'someone')
+    expect(r.code).toBe(3)
+    expect(r.env.error.code).toBe('AUTH_REQUIRED')
   })
 })
 

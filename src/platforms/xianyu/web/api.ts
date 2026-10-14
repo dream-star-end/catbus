@@ -100,6 +100,42 @@ export function itemInfo(x: Xianyu, itemId: string) {
   return signed(x, 'mtop.taobao.idle.pc.detail', '{"itemId":"' + itemId + '"}', SESSION_HEADERS, IM_SPM)
 }
 
+const FEED_SPM: Spm = { spmCnt: 'a21ybx.home.0.0', spmPre: '', logId: '' }
+const SEARCH_SPM: Spm = { spmCnt: 'a21ybx.search.0.0', spmPre: '', logId: '' }
+
+/**
+ * 推荐流（mtop.taobao.idlehome.home.webpc.feed）。游客可调（buildInitialCookies 拿到的 _m_h5_tk 即可签名），
+ * 实测返回 cardList（cardType 61801 为商品卡）。分页：data.nextPage 为 true 且 pageNumber 递增。
+ */
+export function feedList(x: Xianyu, pageNumber: number) {
+  return signed(x, 'mtop.taobao.idlehome.home.webpc.feed', JSON.stringify({ pageNumber }), API_HEADERS, FEED_SPM)
+}
+
+export interface SearchParams {
+  keyword: string
+  pageNumber?: number
+  sortField?: string
+  sortValue?: string
+}
+
+/**
+ * 商品搜索（mtop.taobao.idlemtopsearch.pc.search）。请求格式抄自 www.goofish.com 搜索页 JS
+ *（pageNumber/keyword/rowsPerPage/searchReqFromPage，与 p_search-index.js 的 w() 一致）。
+ * 注意：匿名调用会被风控（RGV587），需要登录态；响应 data.resultList[]，总数在
+ * data.resultInfo.searchResControlFields.numFound。
+ */
+export function searchItems(x: Xianyu, p: SearchParams) {
+  const data = {
+    pageNumber: p.pageNumber ?? 1,
+    keyword: p.keyword,
+    rowsPerPage: 30,
+    sortField: p.sortField ?? '',
+    sortValue: p.sortValue ?? '',
+    searchReqFromPage: 'pcSearch',
+  }
+  return signed(x, 'mtop.taobao.idlemtopsearch.pc.search', JSON.stringify(data), API_HEADERS, SEARCH_SPM)
+}
+
 interface ImageInfo {
   url: string
   width: number

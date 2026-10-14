@@ -16,7 +16,7 @@ export default definePlatform({
         'auth login': impl('full', 'authLogin'),
         'auth status': impl('partial', 'authStatus', { note: '上游没有取当前用户的接口：换一次私信 token 校验，账号信息取自 cookie 里的 unb 和昵称' }),
 
-        'user get': impl('partial', 'userGet', { note: '参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 规划中' }),
+        'user get': impl('partial', 'userGet', { note: '参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 返回当前登录用户' }),
         'user items': 'none',
         'user collects': 'none',
 
@@ -26,7 +26,9 @@ export default definePlatform({
         'item collect': 'none',
         'item uncollect': 'none',
 
-        'comment list': 'none',
+        'comment list': impl('partial', 'commentList', {
+          note: '商品评价（mtop.taobao.rate.detaillist.get）；匿名调用会被风控（RGV587），需要登录态',
+        }),
 
         'feed list': { upstream: 'none', options: { kind: filter.kind('recommend') } },
 
@@ -46,7 +48,7 @@ export default definePlatform({
         'live start': 'none',
         'live stop': 'none',
 
-        'keyword suggest': 'none',
+        'keyword suggest': impl('full', 'keywordSuggest'),
 
         'msg list': 'none',
         'msg history': impl('full', 'msgHistory'),

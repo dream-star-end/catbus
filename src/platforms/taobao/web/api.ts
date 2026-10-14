@@ -76,9 +76,83 @@ export function parseSeller(tb: Taobao, page: { url: string; html: string }): Se
 }
 
 /**
- * upload_media：上传图片，返回响应里的 `object`（fileId、url、size、pix）。
- * 上游不管文件是什么格式，Content-Type 一律写 image/png，这里照做。
+ * 搜索联想词：公开接口，无需签名（suggest.taobao.com）。
+ * 返回 { result: [[词, 热度], ...] }。
  */
+export async function suggest(tb: Taobao, q: string): Promise<string[]> {
+  const url = `https://suggest.taobao.com/sug?code=utf-8&q=${encodeURIComponent(q)}`
+  const res = await tb.request({ url, headers: TOKEN_HEADERS })
+  const body = await parseJson<{ result?: [string, string][] }>(res)
+  return (body?.result ?? []).map(([w]) => w).filter(Boolean)
+}
+
+/** 通用 mtop H5 请求（getToken 的泛化）：_m_h5_tk 签名，JSONP 回包。 */
+async function mtop<T>(tb: Taobao, apiName: string, v: string, data: string): Promise<any> {
+  const t = rand.nowSeconds() * 1000
+  const token = (tb.cookie('_m_h5_tk') ?? '').split('_')[0]!
+  const query: Pairs = [
+    ['jsv', '2.7.0'],
+    ['appKey', APP_KEY],
+    ['t', t],
+    ['sign', generateSign(t, token, data)],
+    ['api', apiName],
+    ['v', v],
+    ['dataType', 'jsonp'],
+    ['type', 'jsonp'],
+    ['callback', 'mtopjsonp1'],
+    ['data', data],
+    ['ecode', '1'],
+  ]
+  const text = await tb.text({ url: `https://h5api.m.taobao.com/h5/${apiName}/${v}/`, query, headers: TOKEN_HEADERS })
+  const body = parseJsonp(text)
+  if (body == null) throw new CatbusError('UPSTREAM', '淘宝返回的不是 mtop 的 JSONP', { detail: { body: text.slice(0, 300) } })
+  return body
+}
+
+export interface RateListParams {
+  auctionNumId: string
+  pageNo?: number
+  pageSize?: number
+  /** 评价类型：all 全部、pic 有图、append 追评 */
+  rateType?: string
+}
+
+/**
+ * 商品评价列表（mtop.taobao.rate.detaillist.get v6.0）。参数格式抄自淘宝 PC 搜索页 JS
+ *（showTrueCount/auctionNumId/pageNo/pageSize/rateType/searchImpr/orderType/rateSrc=pc_rate_list）。
+ * needLogin=false，但匿名调用会被风控（RGV587），需要登录态。
+ */
+export async function rateList(tb: Taobao, p: RateListParams): Promise<any> {
+  const rateMap: Record<string, { rateType: string; searchImpr: string }> = {
+    all: { rateType: '', searchImpr: '-8' },
+    pic: { rateType: '7', searchImpr: '7' },
+    append: { rateType: '2', searchImpr: '2' },
+  }
+  const m = rateMap[p.rateType ?? 'all'] ?? rateMap.all!
+  const data = JSON.stringify({
+    showTrueCount: false,
+    auctionNumId: p.auctionNumId,
+    pageNo: p.pageNo ?? 1,
+    pageSize: p.pageSize ?? 20,
+    rateType: m.rateType,
+    searchImpr: m.searchImpr,
+    orderType: '',
+    rateSrc: 'pc_rate_list',
+  })
+  const body = await mtop(tb, 'mtop.taobao.rate.detaillist.get', '6.0', data)
+  const ret = String(body?.ret?.[0] ?? '')
+  if (/SESSION_EXPIRED|FAIL_SYS_SESSION|NOT_LOGIN|ERR_SID_INVALID/i.test(ret)) {
+    throw authError(tb.ctx, `淘宝登录态无效：${ret}`)
+  }
+  if (/FAIL_SYS_USER_VALIDATE/.test(ret)) {
+    throw new CatbusError('RISK_CONTROL', `淘宝要求人机验证：${ret}`, { detail: { kind: 'captcha', ret: body?.ret } })
+  }
+  if (/RGV587|FAIL_SYS_TRAFFIC_LIMIT|FAIL_SYS_ILLEGAL_ACCESS/.test(ret)) {
+    throw new CatbusError('RISK_CONTROL', `淘宝风控拦截：${ret}`, { detail: { kind: 'blocked', ret: body?.ret } })
+  }
+  if (!/^SUCCESS/.test(ret)) throw new CatbusError('UPSTREAM', `淘宝返回错误：${ret}`, { detail: { ret: body?.ret ?? null } })
+  return body
+}
 export async function uploadMedia(tb: Taobao, file: Pick<LocalMedia, 'data' | 'filename'>): Promise<any> {
   const res = await tb.request({
     method: 'POST',

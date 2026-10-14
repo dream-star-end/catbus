@@ -8,6 +8,7 @@ import { CatbusError } from '../../../core/errors.js'
 import { PACKAGE_ROOT, staticFile } from '../../../core/paths.js'
 import * as rand from '../../../core/rand.js'
 import { createContext } from '../../../core/vm.js'
+import { signFull as signFullNative } from './sign-native.js'
 
 /**
  * 上游签名 JS（static/xhs/，原样复制，保持 xhs_core/js、xhs_pc/js、xhs_creator/js 的相对结构）。
@@ -95,7 +96,10 @@ export interface SignResult {
 
 /** mns + X-s + X-t（+ X-S-Common，给了 dslPair 时）。入参与上游 runtime.run_signer 写给 node 的 JSON 相同。 */
 export function signFull(input: Record<string, unknown>): SignResult {
-  return jsModule(CORE_JS('sign.js')).signFull(input) as SignResult
+  if (process.env.CATBUS_XHS_SIGN_IMPL === 'vm') {
+    return jsModule(CORE_JS('sign.js')).signFull(input) as SignResult
+  }
+  return signFullNative(input) as SignResult
 }
 
 /** 上游 run_signer 的输出门禁：mns 前缀与长度（PC）或长度集合（Creator）。 */

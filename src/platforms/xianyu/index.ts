@@ -24,7 +24,10 @@ export default definePlatform({
         'user unfollow': 'none',
 
         'item get': impl('full', 'itemGet'),
-        'item search': 'none',
+        'item search': impl('partial', 'itemSearch', {
+          options: { sort: filter.sort('price_asc', 'price_desc') },
+          note: '匿名调用会被风控（RGV587），需要登录态',
+        }),
         'item related': 'none',
         'item list': 'none',
         'item collect': 'none',
@@ -43,7 +46,7 @@ export default definePlatform({
         'item delete': 'none',
         'item categories': 'none',
 
-        'feed list': { upstream: 'none', options: { kind: filter.kind('recommend') } },
+        'feed list': impl('full', 'feedList', { options: { kind: filter.kind('recommend') } }),
 
         'keyword suggest': 'none',
 

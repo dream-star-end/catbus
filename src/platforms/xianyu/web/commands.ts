@@ -6,6 +6,7 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
+import { paged } from '../../../core/toolkit.js'
 import { history, type Im, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { unsignedMtop, Xianyu, xianyu } from './client.js'
@@ -110,6 +111,33 @@ export async function itemGet(ctx: Ctx) {
   const x = xianyu(ctx)
   const id = await resolveItem(x, ctx.args.item!)
   return norm.item((await api.itemInfo(x, id)).data, x.myId)
+}
+
+/** 推荐流（feed list recommend）：mtop.taobao.idlehome.home.webpc.feed，游客可调。 */
+export async function feedList(ctx: Ctx) {
+  const x = xianyu(ctx)
+  const page = Number(ctx.cursor ?? 1) || 1
+  const body = await api.feedList(x, page)
+  const items = norm.feedItems(body.data)
+  const hasMore = body.data?.nextPage === true && items.length > 0
+  return paged(items, hasMore ? String(page + 1) : null, hasMore)
+}
+
+/** 商品搜索：mtop.taobao.idlemtopsearch.pc.search。匿名会被风控（RGV587），需要登录态。 */
+export async function itemSearch(ctx: Ctx) {
+  const x = xianyu(ctx)
+  const page = Number(ctx.cursor ?? 1) || 1
+  const o = ctx.options as { sort?: string }
+  let sortField = ''
+  let sortValue = ''
+  if (o.sort === 'price_asc') { sortField = 'price'; sortValue = 'asc' }
+  else if (o.sort === 'price_desc') { sortField = 'price'; sortValue = 'desc' }
+  const body = await api.searchItems(x, { keyword: ctx.args.keyword!, pageNumber: page, sortField, sortValue })
+  const items = norm.searchItems(body.data)
+  const total = norm.searchTotal(body.data)
+  // rowsPerPage=30：不满页即无更多
+  const hasMore = items.length >= 30
+  return paged(items, hasMore ? String(page + 1) : null, hasMore)
 }
 
 type Shipping = api.Shipping

@@ -51,7 +51,7 @@
 
 - tiktok `user get`：me 部分支持
 - xianyu `user get`：只支持 me；查询他人规划中
-- taobao `user get`：参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 规划中
+- taobao `user get`：参数只接受商品链接（淘宝 / 天猫商品页或 m.tb.cn 分享短链），返回这件商品的卖家；me 从 cookie 的 unb/_nk_ 返回当前用户
 - jd `user get`：只支持 me
 - kuaishou `user likes`：只支持 me
 - kuaishou `user followers`：只支持 me
@@ -68,7 +68,7 @@
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
 | item get | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ○ | ✓ | ✓ |
-| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ○ | ○ | ✓ | ✓ |
+| item search | ✓ | ✓ | ✓ | ✓ | ◐ | ◐ | ◐ | ○ | ✓ | ✓ |
 | item related | ○ | ○ | ✓ | ✓ | ✓ | — | ○ | ○ | ◐ | — |
 | item list | ✓ | ◐ | ✓ | ✓ | ✓ | ○ | ○ | — | — | — |
 | item media | ✓ | ✓ | ◐ | ✓ | ✓ | ○ | — | — | — | ✓ |
@@ -83,6 +83,7 @@
 - douyin `item search`：--type video 走视频频道搜索，其余走综合频道；--type image 只要图文
 - kuaishou `item search`：没有筛选（--sort / --type / --time），只按关键词搜
 - weibo `item search`：只能取第一页（m.weibo.cn 的访客从第二页起要求登录）
+- xianyu `item search`：已实现（mtop.taobao.idlemtopsearch.pc.search）；匿名调用被 RGV587 风控拦截，需要登录态（待登录验证）
 - x `item search`：--type video / image 走媒体搜索，按类型过滤，不能和 --sort latest 一起用
 - jd `item related`：用第一个相关搜索词的搜索结果
 - douyin `item list`：取发布页的作品预览（work_list）；定时未发布的作品 status 为 draft
@@ -138,7 +139,7 @@
 
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
-| comment list | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ | — | ○ | ◐ | ✓ |
+| comment list | ◐ | ✓ | ✓ | ◐ | ◐ | ◐ | — | ◐ | ◐ | ✓ |
 | comment replies | ✓ | ✓ | ✓ | ○ | ◐ | ○ | — | — | — | ○ |
 | comment add | ○ | ✓ | ✓ | ◐ | ○ | ○ | — | — | — | ✓ |
 | comment delete | ○ | ○ | ○ | ◐ | ○ | ○ | — | — | — | ✓ |
@@ -148,6 +149,7 @@
 - bilibili `comment list`：动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响
 - kuaishou `comment list`：--product 规划中
 - weibo `comment list`：只有一级评论
+- taobao `comment list`：已实现（mtop.taobao.rate.detaillist.get）；匿名调用被 RGV587 风控拦截，需要登录态（待登录验证）
 - jd `comment list`：只有第一页；--limit N 在一次请求里取 N 条
 - kuaishou `comment replies`：上游的二级评论接口只核对过一组抓包参数，其余评论的结果没有经过上游核对
 - bilibili `comment add`：动态只支持纯文字和转发：图文动态（带图）的评论区挂在相簿上，上游没有查相簿 ID 的接口；稿件、专栏不受影响
@@ -161,9 +163,9 @@
 
 | 命令 | xhs | douyin | tiktok | bilibili | kuaishou | weibo | xianyu | taobao | jd | x |
 |---|---|---|---|---|---|---|---|---|---|---|
-| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ○ | ○ | ○ | ◐ |
+| feed list | ◐ | ◐ | ✓ | ◐ | ◐ | ○ | ✓ | ○ | ○ | ◐ |
 | feed categories | ✓ | — | ○ | — | — | — | — | — | — | — |
-| keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ○ | ✓ | ○ |
+| keyword suggest | ✓ | ○ | ✓ | ○ | ○ | ○ | ○ | ✓ | ✓ | ○ |
 | keyword hot | ✓ | ○ | ○ | ○ | ○ | ○ | — | — | ✓ | ○ |
 
 - xhs `feed list`：following 规划中

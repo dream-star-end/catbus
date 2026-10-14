@@ -799,6 +799,7 @@ wreq-js 默认会读 `HTTP(S)_PROXY` 环境变量和 Windows 系统代理。为�
   - `require` 用 `createRequire` 指向 catbus 自己的 `node_modules`，这样 `crypto-js` / `jsdom` / `@napi-rs/canvas` 从主包依赖里解析。
 - 原来按命令行脚本写的 JS（读 argv / stdin、往 stdout 打印），由 TS 包装层喂参数、收结果。
 - vm 跑不了的脚本（依赖进程级状态等），退回到 `worker_threads`，或者用 `process.execPath` 起子进程。
+- **原生化例外（小红书 web 签名）**：`src/platforms/xhs/web/sign-native.ts` 是 `static/xhs/xhs_core/js/sign.js`（连同 `mns.js`、`xs_common.js`）的纯 TS 移植，与 vm 路径逐字节对齐（golden 对拍为裁判）；`js.ts` 的 `signFull` 默认走原生实现，`CATBUS_XHS_SIGN_IMPL=vm` 可切回 vm 路径。服务端下发的 DS 程序（Creator 0101 的 `_dsf`）是动态代码、无法静态移植，仍在隔离 vm 里执行。
 - 上游 Python 里围绕 JS 的胶水代码，以及纯 Python 实现的签名（如 wbi、mtop sign），都移植成 TS。
 
 ### 7.5 移植与对拍测试

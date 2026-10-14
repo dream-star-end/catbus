@@ -50,6 +50,54 @@ export function item(d: any, myId = ''): Item {
   )
 }
 
+/** 推荐流 / 搜索结果的商品卡 → Item（feed 的 cardData / search 的 resultList 条目）。 */
+function cardItem(cd: any, raw: any): Item | null {
+  const id = n.id(cd?.itemId)
+  if (!id) return null
+  const media: Media[] = (cd.images ?? []).map((img: any) =>
+    n.media({ type: 'image', url: n.url(img.url) ?? '', width: n.count(img.widthSize), height: n.count(img.heightSize) }, img),
+  )
+  const mainPic = n.url(cd.mainPicInfo?.url)
+  if (mainPic && !media.some((m) => m.url === mainPic)) {
+    media.unshift(n.media({ type: 'image', url: mainPic, width: n.count(cd.mainPicInfo?.widthSize), height: n.count(cd.mainPicInfo?.heightSize) }))
+  }
+  const sellerId = n.id(cd.user?.userId ?? cd.sellerId)
+  return n.item(
+    {
+      id,
+      kind: 'goods',
+      url: itemUrl(id),
+      title: n.str(cd.titleSummary?.text ?? cd.title),
+      text: n.str(cd.desc),
+      author: ref(sellerId, cd.user?.userNick ?? cd.sellerNick),
+      created_at: n.time(cd.gmtCreate ?? cd.publishTime),
+      cover: media.find((m) => m.type === 'image')?.url ?? null,
+      media,
+      stats: { views: n.count(cd.browseCnt), collects: n.count(cd.wantCnt ?? cd.collectCnt), comments: n.count(cd.commentCnt) },
+      price: n.price(cd.priceInfo?.price ?? cd.price),
+      status: null,
+    },
+    raw,
+  )
+}
+
+/** 推荐流一页（mtop.taobao.idlehome.home.webpc.feed 的 data）：只取商品卡（cardType 61801）。 */
+export function feedItems(d: any): Item[] {
+  const cards = d?.cardList ?? []
+  return cards.filter((c: any) => c?.cardType === 61801).map((c: any) => cardItem(c.cardData, c)).filter((i: any): i is Item => i != null)
+}
+
+/** 搜索结果一页（mtop.taobao.idlemtopsearch.pc.search 的 data）：resultList[]。 */
+export function searchItems(d: any): Item[] {
+  const list = d?.resultList ?? []
+  return list.map((it: any) => cardItem({ ...it, titleSummary: { text: it.title }, priceInfo: { price: it.price }, mainPicInfo: { url: it.picUrl } }, it)).filter((i: any): i is Item => i != null)
+}
+
+/** 搜索总数（resultInfo.searchResControlFields.numFound）。 */
+export function searchTotal(d: any): number | null {
+  return n.count(d?.resultInfo?.searchResControlFields?.numFound)
+}
+
 /** 当前登录用户（loginuser.get 的 data，缺的字段用 cookie 补）。 */
 export function me(d: any, fallback: UserRef): User {
   const id = n.id(d?.userId ?? d?.userID ?? d?.uid ?? fallback.id)

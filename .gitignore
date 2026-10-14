@@ -26,3 +26,13 @@ docs/roadmap.md
 
 # docker compose 的下载目录
 downloads/
+
+# 逆向研究中间产物（APK/安装包/venv/反编译树/解包目录），只留报告进版本控制
+research/*/venv/
+research/*/*.apk
+research/*/*.xapk
+research/*/*.exe
+research/*/*.7z
+research/*/dex/
+research/*/jadx*/
+research/*/extracted/

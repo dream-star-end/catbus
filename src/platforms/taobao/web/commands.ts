@@ -5,6 +5,7 @@ import * as n from '../../../core/normalize.js'
 import * as rand from '../../../core/rand.js'
 import type { HandlerContext } from '../../../core/registry.js'
 import type { AuthStatus, Media, Message } from '../../../core/schemas.js'
+import { paged } from '../../../core/toolkit.js'
 import { history, listen, pushedPayloads } from '../../_shared/impaas.js'
 import * as api from './api.js'
 import { accessToken, Taobao, taobao } from './client.js'
@@ -52,10 +53,12 @@ export async function authStatus(ctx: Ctx): Promise<AuthStatus> {
 
 // ================================================================ user
 
-/** 卖家资料：打开商品页取卖家（上游 get_goods_uid_encrypt_uid）。 */
+/** 当前用户：cookie 里的 unb / _nk_（上游没有取当前用户的接口）。 */
 export async function userGet(ctx: Ctx) {
   if (ctx.args.user === 'me') {
-    throw new CatbusError('NOT_IMPLEMENTED', 'taobao 的 user get me 尚未实现', { hint: 'catbus taobao auth status', detail: { upstream: 'none' } })
+    const tb = taobao(ctx)
+    tb.requireLogin()
+    return n.user({ id: tb.myId, name: tb.nick || null, url: null }, { from: 'cookie' })
   }
   const tb = taobao(ctx)
   const page = await api.goodsPage(tb, await resolveSellerItem(tb, ctx.args.user!))
@@ -179,4 +182,37 @@ export async function mediaUpload(ctx: Ctx): Promise<Media> {
   const file = await readMedia(tb.http, ctx.args.file!)
   if (!file.contentType.startsWith('image/')) throw new CatbusError('UNSUPPORTED', `淘宝只支持上传图片：${ctx.args.file}`)
   return norm.uploaded((await api.uploadMedia(tb, file)).object)
+}
+
+// ================================================================ keyword
+
+/** 搜索联想词：公开接口，游客可调。 */
+export async function keywordSuggest(ctx: Ctx) {
+  const tb = taobao(ctx)
+  return norm.keywords(await api.suggest(tb, ctx.args.prefix!))
+}
+
+// ================================================================ comment
+
+/** 从商品参数里取纯数字的 auctionNumId（comment list 用）。 */
+function auctionNumId(input: string): string {
+  const s = input.trim()
+  if (/^\d+$/.test(s)) return s
+  const m = /[?&]id=(\d+)/.exec(s)
+  if (m) return m[1]!
+  throw new CatbusError('USAGE', `无法识别的商品：${input}`, { hint: '传商品 ID 或商品链接' })
+}
+
+/**
+ * 商品评价列表（mtop.taobao.rate.detaillist.get v6.0）。
+ * 匿名调用会被风控（RGV587），需要登录态。
+ */
+export async function commentList(ctx: Ctx) {
+  const tb = taobao(ctx)
+  const page = Number(ctx.cursor ?? 1) || 1
+  const id = auctionNumId(ctx.args.item!)
+  const body = await api.rateList(tb, { auctionNumId: id, pageNo: page, pageSize: 20, rateType: 'all' })
+  const comments = norm.rateComments(body.data, id)
+  const hasMore = body.data?.rateList?.hasNext === true && comments.length > 0
+  return paged(comments, hasMore ? String(page + 1) : null, hasMore)
 }

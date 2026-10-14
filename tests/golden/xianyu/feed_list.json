@@ -1,0 +1,264 @@
+{
+  "input": {
+    "page": 1
+  },
+  "seed": 20260927,
+  "now": 1790000000123,
+  "requests": [
+    {
+      "method": "POST",
+      "url": "https://h5api.m.goofish.com/h5/mtop.taobao.idlehome.home.webpc.feed/1.0/?jsv=2.7.2&appKey=34839810&t=1790000000000&sign=4ac01886dd985b36c97a0f9c18ebeb00&v=1.0&type=originaljson&accountSite=xianyu&dataType=json&timeout=20000&api=mtop.taobao.idlehome.home.webpc.feed&sessionOption=AutoLoginOnly&spm_cnt=a21ybx.home.0.0&spm_pre=&log_id=",
+      "headers": [
+        [
+          "accept",
+          "application/json"
+        ],
+        [
+          "accept-language",
+          "en,zh-CN;q=0.9,zh;q=0.8,zh-TW;q=0.7,ja;q=0.6"
+        ],
+        [
+          "cache-control",
+          "no-cache"
+        ],
+        [
+          "content-type",
+          "application/x-www-form-urlencoded"
+        ],
+        [
+          "origin",
+          "https://www.goofish.com"
+        ],
+        [
+          "pragma",
+          "no-cache"
+        ],
+        [
+          "priority",
+          "u=1, i"
+        ],
+        [
+          "referer",
+          "https://www.goofish.com/"
+        ],
+        [
+          "sec-ch-ua",
+          "\"Chromium\";v=\"146\", \"Not-A.Brand\";v=\"24\", \"Google Chrome\";v=\"146\""
+        ],
+        [
+          "sec-ch-ua-mobile",
+          "?0"
+        ],
+        [
+          "sec-ch-ua-platform",
+          "\"Windows\""
+        ],
+        [
+          "sec-fetch-dest",
+          "empty"
+        ],
+        [
+          "sec-fetch-mode",
+          "cors"
+        ],
+        [
+          "sec-fetch-site",
+          "same-site"
+        ],
+        [
+          "user-agent",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+        ]
+      ],
+      "cookies": [
+        [
+          "cna",
+          "fakecna"
+        ],
+        [
+          "cookie2",
+          "fakecookie2"
+        ],
+        [
+          "t",
+          "faket"
+        ],
+        [
+          "_tb_token_",
+          "faketbtoken"
+        ],
+        [
+          "unb",
+          "2200000001"
+        ],
+        [
+          "tracknick",
+          "tester"
+        ],
+        [
+          "sgcookie",
+          "fakesg"
+        ],
+        [
+          "_m_h5_tk",
+          "0123456789abcdef0123456789abcdef_1790003600000"
+        ],
+        [
+          "_m_h5_tk_enc",
+          "fakeenc"
+        ]
+      ],
+      "body": "data=%7B%22pageNumber%22%3A1%7D",
+      "multipart": null
+    }
+  ],
+  "responses": [
+    {
+      "status": 200,
+      "headers": {},
+      "body": {
+        "api": "mtop.taobao.idlehome.home.webpc.feed",
+        "v": "1.0",
+        "ret": [
+          "SUCCESS::调用成功"
+        ],
+        "data": {
+          "cardList": [
+            {
+              "cardType": 61801,
+              "cardData": {
+                "itemId": "900000000101",
+                "titleSummary": {
+                  "text": "九成新机械键盘 青轴"
+                },
+                "priceInfo": {
+                  "price": "199.00",
+                  "preText": "¥"
+                },
+                "city": "杭州",
+                "user": {
+                  "userNick": "测试卖家",
+                  "avatar": "http://img.alicdn.com/fake/avatar.jpg"
+                },
+                "mainPicInfo": {
+                  "url": "http://img.alicdn.com/bao/uploaded/fake1.jpg",
+                  "widthSize": 800,
+                  "heightSize": 600
+                },
+                "images": [
+                  {
+                    "url": "http://img.alicdn.com/bao/uploaded/fake1.jpg",
+                    "widthSize": 800,
+                    "heightSize": 600,
+                    "major": true
+                  }
+                ]
+              }
+            },
+            {
+              "cardType": 61801,
+              "cardData": {
+                "itemId": "900000000102",
+                "titleSummary": {
+                  "text": "二手 iPhone 13"
+                },
+                "priceInfo": {
+                  "price": "3200.00",
+                  "preText": "¥"
+                },
+                "city": "上海",
+                "user": {
+                  "userNick": "卖家乙",
+                  "avatar": "http://img.alicdn.com/fake/avatar2.jpg"
+                },
+                "mainPicInfo": {
+                  "url": "http://img.alicdn.com/bao/uploaded/fake2.jpg",
+                  "widthSize": 640,
+                  "heightSize": 640
+                },
+                "images": []
+              }
+            },
+            {
+              "cardType": 99999,
+              "cardData": {
+                "titleSummary": {
+                  "text": "非商品卡片应被过滤"
+                }
+              }
+            }
+          ],
+          "nextPage": true,
+          "feedsCount": 100
+        }
+      }
+    }
+  ],
+  "result": [
+    {
+      "id": "900000000101",
+      "kind": "goods",
+      "url": "https://www.goofish.com/item?id=900000000101",
+      "title": "九成新机械键盘 青轴",
+      "text": null,
+      "author": null,
+      "created_at": null,
+      "cover": "https://img.alicdn.com/bao/uploaded/fake1.jpg",
+      "media": [
+        {
+          "id": null,
+          "type": "image",
+          "url": "https://img.alicdn.com/bao/uploaded/fake1.jpg",
+          "width": 800,
+          "height": 600,
+          "duration": null
+        }
+      ],
+      "stats": {
+        "views": null,
+        "likes": null,
+        "comments": null,
+        "collects": null,
+        "shares": null
+      },
+      "price": {
+        "amount": 199,
+        "currency": "CNY"
+      },
+      "status": null
+    },
+    {
+      "id": "900000000102",
+      "kind": "goods",
+      "url": "https://www.goofish.com/item?id=900000000102",
+      "title": "二手 iPhone 13",
+      "text": null,
+      "author": null,
+      "created_at": null,
+      "cover": "https://img.alicdn.com/bao/uploaded/fake2.jpg",
+      "media": [
+        {
+          "id": null,
+          "type": "image",
+          "url": "https://img.alicdn.com/bao/uploaded/fake2.jpg",
+          "width": 640,
+          "height": 640,
+          "duration": null
+        }
+      ],
+      "stats": {
+        "views": null,
+        "likes": null,
+        "comments": null,
+        "collects": null,
+        "shares": null
+      },
+      "price": {
+        "amount": 3200,
+        "currency": "CNY"
+      },
+      "status": null
+    }
+  ],
+  "error": null
+}

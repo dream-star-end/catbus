@@ -114,3 +114,36 @@ export function seller(s: Seller, html: string): User {
   const shopUrl = n.url(jsonString(/"shopUrl":"(.*?)"/.exec(html)?.[1]))
   return n.user({ id: s.uid, name: shop ?? nick, handle: nick, url: shopUrl }, { ...s, seller_nick: nick, shop_name: shop, shop_url: shopUrl })
 }
+
+/** 搜索联想词（suggest.taobao.com 的 result：[词, 热度][]）。 */
+export function keywords(words: string[]): import('../../../core/schemas.js').Keyword[] {
+  return words.map((w) => n.keyword({ text: w }, { word: w }))
+}
+
+/**
+ * 商品评价（mtop.taobao.rate.detaillist.get 的 data.rateList.rateList[]）。
+ * 字段名按淘宝 PC 评价页的渲染逻辑取（rateId/rateContent/feedNickName/rateDate/picList），
+ * 防御式取值：匿名/未登录验证前不要假设字段必存在。
+ */
+export function rateComment(r: any, auctionNumId: string): import('../../../core/schemas.js').Comment | null {
+  const id = n.id(r?.rateId ?? r?.id)
+  if (!id) return null
+  return n.comment(
+    {
+      id,
+      item_id: auctionNumId,
+      parent_id: null,
+      author: n.userRef({ id: n.id(r?.userId), name: n.str(r?.feedNickName ?? r?.nick), url: null }),
+      text: n.str(r?.rateContent ?? r?.content) ?? '',
+      created_at: n.time(r?.rateDate),
+      stats: { likes: n.count(r?.useful ?? r?.likeCount), replies: n.count(r?.replyCount) },
+    },
+    r,
+  )
+}
+
+/** 评价列表一页（data.rateList：{ rateList[], totalCount, hasNext }）。 */
+export function rateComments(d: any, auctionNumId: string): import('../../../core/schemas.js').Comment[] {
+  const list = d?.rateList?.rateList ?? d?.rateList ?? []
+  return (Array.isArray(list) ? list : []).map((r: any) => rateComment(r, auctionNumId)).filter((c: any): c is import('../../../core/schemas.js').Comment => c != null)
+}

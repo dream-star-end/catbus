@@ -9,6 +9,7 @@ import { deterministic } from '../src/core/rand.js'
 import { RAW } from '../src/core/schemas.js'
 import * as api from '../src/platforms/xianyu/web/api.js'
 import { Xianyu } from '../src/platforms/xianyu/web/client.js'
+import * as norm from '../src/platforms/xianyu/web/normalize.js'
 import { authLogin, itemGet, itemPublish, msgHistory, msgListen, msgSend } from '../src/platforms/xianyu/web/commands.js'
 import {
   ackDiffFrame,
@@ -199,6 +200,10 @@ describe('xianyu 对拍：HTTP 请求', () => {
     publish_free: () => api.publish(xOf(), { images: [], desc: '全新未拆封', price: null, shipping: 'free', postage: 0, pickup: false }),
     publish_distance: () => api.publish(xOf(), { images: [], desc: '按距离', price: { current: 10, original: 0 }, shipping: 'distance', postage: 0, pickup: false }),
     publish_none: () => api.publish(xOf(), { images: [], desc: '无需邮寄', price: { current: 0.1, original: 0 }, shipping: 'none', postage: 0, pickup: false }),
+    feed_list: async () => {
+      const body = await api.feedList(xOf(), 1)
+      return norm.feedItems(body.data)
+    },
   }
   for (const [name, run] of Object.entries(cases)) {
     it(name, async () => {
